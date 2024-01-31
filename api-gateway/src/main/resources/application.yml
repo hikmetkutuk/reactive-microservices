@@ -6,6 +6,10 @@ spring:
           uri: lb://USER-SERVICE
           predicates:
             - Path=/api/v1/user/**
+        - id: event-service
+          uri: lb://EVENT-SERVICE
+          predicates:
+            - Path=/api/v1/event/**
 
   application:
     name: API-GATEWAY

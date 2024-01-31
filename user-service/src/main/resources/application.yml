@@ -6,7 +6,7 @@ spring:
     name: USER-SERVICE
   data:
     mongodb:
-      uri: mongodb://localhost:27020/reactive-microservices-mongodb
+      uri: mongodb://localhost:27021/reactive-microservices-user
       gridfs:
         database: files
         bucket: images

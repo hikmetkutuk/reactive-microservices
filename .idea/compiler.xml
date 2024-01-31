@@ -10,6 +10,7 @@
         <module name="api-gateway" />
         <module name="user-service" />
         <module name="discovery-server" />
+        <module name="event-service" />
       </profile>
     </annotationProcessing>
   </component>
@@ -17,6 +18,7 @@
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="api-gateway" options="-parameters" />
       <module name="discovery-server" options="-parameters" />
+      <module name="event-service" options="-parameters" />
       <module name="user-service" options="-parameters" />
     </option>
   </component>

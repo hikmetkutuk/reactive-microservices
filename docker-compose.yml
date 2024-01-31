@@ -1,11 +1,20 @@
 version: '3.8'
 services:
-  mongodb:
+  mongodb_user_service:
     image: mongo:7.0.4
-    container_name: reactive-microservices-mongodb
+    container_name: reactive-microservices-mongodb-user-service
     volumes:
-      - data:/data/db
+      - data_user_service:/data/db
     ports:
-      - "27020:27017"
+      - "27021:27017"
+
+  mongodb_event_service:
+    image: mongo:7.0.4
+    container_name: reactive-microservices-mongodb-event-service
+    volumes:
+      - data_event_service:/data/db
+    ports:
+      - "27022:27017"
 volumes:
-  data:
+  data_user_service:
+  data_event_service:
