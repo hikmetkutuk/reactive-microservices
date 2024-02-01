@@ -1,12 +1,11 @@
 package com.microservice.reactive.eventservice.controller;
 
 import com.microservice.reactive.eventservice.dto.request.EventRequest;
+import com.microservice.reactive.eventservice.dto.response.EventResponse;
 import com.microservice.reactive.eventservice.service.EventService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -21,5 +20,10 @@ public class EventController {
     @PostMapping("/create")
     public Mono<ResponseEntity<?>> createEvent(@RequestBody EventRequest eventRequest) {
         return eventService.createEvent(eventRequest);
+    }
+
+    @GetMapping("/list")
+    public Flux<EventResponse> getAllEvents() {
+        return eventService.getAllEvents();
     }
 }

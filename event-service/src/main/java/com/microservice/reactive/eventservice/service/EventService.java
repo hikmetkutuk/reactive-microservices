@@ -1,6 +1,7 @@
 package com.microservice.reactive.eventservice.service;
 
 import com.microservice.reactive.eventservice.dto.request.EventRequest;
+import com.microservice.reactive.eventservice.dto.response.EventResponse;
 import com.microservice.reactive.eventservice.model.Event;
 import com.microservice.reactive.eventservice.repository.EventRepository;
 import org.slf4j.Logger;
@@ -9,6 +10,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -37,5 +39,26 @@ public class EventService {
                 .doOnSuccess(response -> log.info("Event created successfully with name: {}", eventRequest.eventName()))
                 .doOnError(DataAccessException.class, e -> log.error("An error occurred while saving event to the database {}", e.getMessage()))
                 .map(salon -> ResponseEntity.status(HttpStatus.CREATED).body(salon));
+    }
+
+    public Flux<EventResponse> getAllEvents() {
+        return eventRepository.findAll()
+                .flatMap(event -> Mono.just(new EventResponse(
+                        event.getId(),
+                        event.getEventName(),
+                        event.getEventDate(),
+                        event.getLocation(),
+                        event.getDescription(),
+                        event.getCategory()
+                )))
+                .doOnTerminate(() -> log.info("Event fetching process completed"))
+                .onErrorResume(DataAccessException.class, e -> {
+                    log.error("An error occurred while fetching events from the database", e);
+                    return Flux.empty();
+                })
+                .onErrorResume(Exception.class, e -> {
+                    log.error("An unexpected error occurred while fetching events", e);
+                    return Flux.empty();
+                });
     }
 }
