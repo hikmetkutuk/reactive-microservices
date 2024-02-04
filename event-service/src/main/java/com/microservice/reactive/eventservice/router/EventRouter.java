@@ -15,6 +15,7 @@ public class EventRouter {
     public static final String EVENT_ROUTE = "/api/v1/event";
     public static final String EVENT_CREATE = EVENT_ROUTE + "/create";
     public static final String EVENT_LIST = EVENT_ROUTE + "/list";
+    public static final String EVENT_LIST_BY_ID = EVENT_ROUTE + "/list/{eventId}";
     private final EventHandler eventHandler;
 
     public EventRouter(EventHandler eventHandler) {
@@ -26,6 +27,7 @@ public class EventRouter {
         return route()
                 .POST(EVENT_CREATE, accept(APPLICATION_JSON), eventHandler::handleCreateEvent)
                 .GET(EVENT_LIST, accept(APPLICATION_JSON), eventHandler::handleGetAllEvents)
+                .GET(EVENT_LIST_BY_ID, accept(APPLICATION_JSON), eventHandler::handleGetEventById)
                 .build();
     }
 }
