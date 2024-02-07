@@ -10,13 +10,9 @@ spring:
           uri: lb://EVENT-SERVICE
           predicates:
             - Path=/api/v1/event/**
-        - id: attendance-service
-          uri: lb://ATTENDANCE-SERVICE
-          predicates:
-            - Path=/api/v1/attendance/**
-
   application:
     name: API-GATEWAY
+
 
 jwt:
   secret: MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALag2jFucjXRNO6UzOd8nOmviyYMZ5NGD7YO1lQF3sFfkDtooeWuMY5DNi4YQSLhUJ2Zqmea9+lQsOK3UG/W2IsCAwEAAQ==
@@ -25,3 +21,6 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+
+server:
+  port: 8090
