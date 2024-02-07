@@ -9,6 +9,8 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 @Component
 public class EventHandler {
     private final EventService eventService;
@@ -28,5 +30,11 @@ public class EventHandler {
     public Mono<ServerResponse> handleGetAllEvents(ServerRequest request) {
         Flux<EventResponse> events = eventService.getAllEvents();
         return ServerResponse.ok().body(events, EventResponse.class);
+    }
+
+    public Mono<ServerResponse> handleGetEventById(ServerRequest request) {
+        UUID eventId = UUID.fromString(request.pathVariable("eventId"));
+        Mono<EventResponse> event = eventService.getEventById(eventId);
+        return ServerResponse.ok().body(event, EventResponse.class);
     }
 }

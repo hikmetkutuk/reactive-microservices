@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/v1/event")
 public class EventController {
@@ -25,5 +27,10 @@ public class EventController {
     @GetMapping("/list")
     public Flux<EventResponse> getAllEvents() {
         return eventService.getAllEvents();
+    }
+
+    @GetMapping("/list/{eventId}")
+    public Mono<EventResponse> getEventById(@PathVariable("eventId") UUID eventId) {
+        return eventService.getEventById(eventId);
     }
 }

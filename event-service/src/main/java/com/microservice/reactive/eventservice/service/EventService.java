@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -33,6 +34,7 @@ public class EventService {
                 .location(eventRequest.location())
                 .description(eventRequest.description())
                 .category(eventRequest.category())
+                .createdDate(LocalDateTime.now())
                 .build();
 
         return eventRepository.save(newEvent)
@@ -59,6 +61,27 @@ public class EventService {
                 .onErrorResume(Exception.class, e -> {
                     log.error("An unexpected error occurred while fetching events", e);
                     return Flux.empty();
+                });
+    }
+
+    public Mono<EventResponse> getEventById(UUID eventId) {
+        return eventRepository.findById(eventId)
+                .map(event -> new EventResponse(
+                        event.getId(),
+                        event.getEventName(),
+                        event.getEventDate(),
+                        event.getLocation(),
+                        event.getDescription(),
+                        event.getCategory()
+                ))
+                .doOnTerminate(() -> log.info("Event fetching by id process completed"))
+                .onErrorResume(DataAccessException.class, e -> {
+                    log.error("An error occurred while fetching event by id from the database {}", e.getMessage());
+                    return Mono.empty();
+                })
+                .onErrorResume(Exception.class, e -> {
+                    log.error("An unexpected error occurred while fetching event by id", e);
+                    return Mono.empty();
                 });
     }
 }
