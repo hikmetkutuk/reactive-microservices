@@ -1,0 +1,35 @@
+webflux:
+  database:
+    host: 127.0.0.1
+    port: 5433
+    name: attendance-service
+    schema: public
+    username: postgres
+    password: postgres
+    pool:
+      size:
+        initial: 3
+        max: 10
+
+spring:
+  application:
+    name: ATTENDANCE-SERVICE
+  flyway:
+    enabled: true
+    url: jdbc:postgresql://localhost:5433/attendance-service
+    user: postgres
+    password: postgres
+    baseline-version: 0
+  main:
+    allow-bean-definition-overriding: true
+  webflux:
+    problemdetails:
+      enabled: true
+
+server:
+  port: 8093
+
+eureka:
+  client:
+    service-url:
+      defaultZone : http://localhost:8761/eureka/

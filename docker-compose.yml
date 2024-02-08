@@ -16,13 +16,18 @@ services:
     ports:
       - "27022:27017"
 
-  mongodb_attendance_service:
-    image: mongo:7.0.4
-    container_name: reactive-microservices-mongodb-attendance-service
-    volumes:
-      - data_attendance_service:/data/db
+  postgres_attendance_service:
+    image: postgres:15.5
+    container_name: reactive-microservices-postgres-attendance-service
+    restart: always
+    environment:
+      POSTGRES_DB: attendance-service
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
-      - "27023:27017"
+      - "5433:5432"
+    volumes:
+      - data_attendance_service:/var/lib/postgresql/data
 
 volumes:
   data_user_service:
