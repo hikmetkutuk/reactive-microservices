@@ -14,6 +14,7 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 public class AttendanceRouter {
     public static final String ATTENDANCE_ROUTE = "/api/v1/attendance";
     public static final String ATTEND_EVENT = ATTENDANCE_ROUTE + "/event";
+    public static final String ATTENDANCE_EVENT_LIST = ATTENDANCE_ROUTE + "/event/list/{userId}";
     private final AttendanceHandler attendanceHandler;
 
     public AttendanceRouter(AttendanceHandler attendanceHandler) {
@@ -24,6 +25,7 @@ public class AttendanceRouter {
     public RouterFunction<ServerResponse> attendanceRoutes() {
         return route()
                 .POST(ATTEND_EVENT, accept(APPLICATION_JSON), attendanceHandler::handleAttendEvent)
+                .GET(ATTENDANCE_EVENT_LIST, accept(APPLICATION_JSON), attendanceHandler::handleGetEventsByUserId)
                 .build();
     }
 }
