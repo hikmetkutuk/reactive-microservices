@@ -8,6 +8,7 @@ public record UserResponse(
         String email,
         String firstname,
         String lastname,
-        List<String> roles
+        List<String> roles,
+        List<EventResponse> events
 ) {
 }

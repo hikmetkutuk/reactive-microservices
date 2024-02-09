@@ -2,6 +2,7 @@ package com.microservice.reactive.userservice.service;
 
 import com.microservice.reactive.userservice.dto.request.AuthRequest;
 import com.microservice.reactive.userservice.dto.request.UserRequest;
+import com.microservice.reactive.userservice.dto.response.EventResponse;
 import com.microservice.reactive.userservice.dto.response.UserResponse;
 import com.microservice.reactive.userservice.exception.ResourceNotFoundException;
 import com.microservice.reactive.userservice.model.User;
@@ -21,13 +22,17 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -36,6 +41,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final ReactiveAuthenticationManager authenticationManager;
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
+
+    WebClient webClient = WebClient.create("http://localhost:8093/api/v1/attendance");
 
     public UserService(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, PasswordEncoder passwordEncoder, ReactiveAuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
@@ -89,7 +96,18 @@ public class UserService {
 
     public Flux<UserResponse> getAllUsers() {
         return userRepository.findAllByDeletedFalse()
-                .flatMap(user -> Mono.just(new UserResponse(user.getId(), user.getEmail(), user.getFirstname(), user.getLastname(), user.getRoles())))
+                .flatMap(user -> webClient.get()
+                        .uri("/event/list/{userId}", user.getId())
+                        .retrieve()
+                        .bodyToFlux(EventResponse.class)
+                        .collectList()
+                        .map(eventList -> {
+                            if (eventList.isEmpty()) {
+                                return new UserResponse(user.getId(), user.getEmail(), user.getFirstname(), user.getLastname(), user.getRoles(), Collections.emptyList());
+                            } else {
+                                return mapToUserResponse(user, eventList);
+                            }
+                        }))
                 .doOnTerminate(() -> log.info("User fetching process completed"))
                 .onErrorResume(DataAccessException.class, e -> {
                     log.error("An error occurred while fetching users from the database", e);
@@ -101,20 +119,17 @@ public class UserService {
                 });
     }
 
-    public  Mono<UserResponse> getUserById(UUID userId) {
+    public Mono<UserResponse> getUserById(UUID userId) {
         return userRepository.findByIdWithLimit(userId)
                 .switchIfEmpty(Mono.error(new ResourceNotFoundException("User not found with ID: " + userId)))
-                .map(user -> new UserResponse(user.getId(), user.getEmail(), user.getFirstname(), user.getLastname(), user.getRoles()))
+                .flatMap(user -> webClient.get()
+                        .uri("/event/list/{userId}", userId)
+                        .retrieve()
+                        .bodyToFlux(EventResponse.class)
+                        .collectList()
+                        .map(eventList -> mapToUserResponse(user, eventList)))
                 .doOnSuccess(success -> log.info("User fetched for user with ID: {}", userId))
                 .doOnError(error -> log.error("An error occurred during user details fetching for user with ID: {} {}", userId, error.getMessage()));
-    }
-
-    public  Mono<UserResponse> getUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .switchIfEmpty(Mono.error(new ResourceNotFoundException("User not found with email: " + email)))
-                .map(user -> new UserResponse(user.getId(), user.getEmail(), user.getFirstname(), user.getLastname(), user.getRoles()))
-                .doOnSuccess(success -> log.info("User fetched for user with email: {}", email))
-                .doOnError(error -> log.error("An error occurred during user details fetching for user with email: {} {}", email, error.getMessage()));
     }
 
     public Mono<ResponseEntity<UserResponse>> updateUser(UUID userId, UserRequest userRequest) {
@@ -127,7 +142,7 @@ public class UserService {
                     user.setUpdatedDate(LocalDateTime.now());
                     return userRepository.save(user);
                 })
-                .map(updatedUser -> ResponseEntity.ok().body(new UserResponse(updatedUser.getId(), updatedUser.getEmail(), updatedUser.getFirstname(), updatedUser.getLastname(), updatedUser.getRoles())))
+                .map(updatedUser -> ResponseEntity.ok().body(new UserResponse(updatedUser.getId(), updatedUser.getEmail(), updatedUser.getFirstname(), updatedUser.getLastname(), updatedUser.getRoles(), null)))
                 .doOnSuccess(success -> log.info("User updated for user with ID: {}", userId))
                 .doOnError(error -> log.error("An error occurred during user details update for user with ID: {}", userId, error));
     }
@@ -152,5 +167,20 @@ public class UserService {
                 .switchIfEmpty(Mono.error(new ResourceNotFoundException("User not found with ID: " + userId)))
                 .onErrorResume(DataAccessException.class, e -> Mono.just(ResponseEntity.badRequest().body(e.getMessage())))
                 .onErrorResume(Exception.class, e -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage())));
+    }
+
+    private UserResponse mapToUserResponse(User user, List<EventResponse> eventList) {
+        List<EventResponse> events = eventList.stream()
+                .map(eventResponse ->
+                        new EventResponse(
+                                eventResponse.id(),
+                                eventResponse.eventName(),
+                                eventResponse.eventDate(),
+                                eventResponse.location(),
+                                eventResponse.description(),
+                                eventResponse.category()))
+                .collect(Collectors.toList());
+
+        return new UserResponse(user.getId(), user.getEmail(), user.getFirstname(), user.getLastname(), user.getRoles(), events);
     }
 }

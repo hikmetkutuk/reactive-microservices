@@ -47,20 +47,24 @@ public class AttendanceService {
         WebClient webClient = webClientBuilder.build();
 
         return attendanceRepository.findByUserId(userId)
-                .flatMap(attendance -> webClient.get()
-                        .uri("http://localhost:8092/api/v1/event/list/{eventId}", attendance.getEventId())
-                        .retrieve()
-                        .bodyToMono(EventResponse.class)
-                        .map(eventResponse ->
-                                new EventResponse(
+                .flatMap(attendance -> {
+                    if (attendance == null) {
+                        return Flux.empty();
+                    } else {
+                        return webClient.get()
+                                .uri("http://localhost:8092/api/v1/event/list/{eventId}", attendance.getEventId())
+                                .retrieve()
+                                .bodyToMono(EventResponse.class)
+                                .map(eventResponse -> new EventResponse(
                                         eventResponse.id(),
                                         eventResponse.eventName(),
                                         eventResponse.eventDate(),
                                         eventResponse.location(),
                                         eventResponse.description(),
                                         eventResponse.category()
-                                )
-                        ))
+                                ));
+                    }
+                })
                 .doOnTerminate(() -> log.info("Attendances fetching process completed"))
                 .onErrorResume(DataAccessException.class, e -> {
                     log.error("An error occurred while fetching attendances by user ID from the database " + e);
