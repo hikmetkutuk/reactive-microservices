@@ -24,6 +24,7 @@ services:
       POSTGRES_DB: attendance-service
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/attendance
     ports:
       - "5433:5432"
     volumes:

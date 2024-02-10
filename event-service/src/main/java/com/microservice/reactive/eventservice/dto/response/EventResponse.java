@@ -1,6 +1,7 @@
 package com.microservice.reactive.eventservice.dto.response;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public record EventResponse(
@@ -9,6 +10,7 @@ public record EventResponse(
         LocalDateTime eventDate,
         String location,
         String description,
-        String category
+        String category,
+        List<UserResponse> users
 ) {
 }
