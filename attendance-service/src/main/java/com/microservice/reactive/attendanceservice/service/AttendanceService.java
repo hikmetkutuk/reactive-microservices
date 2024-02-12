@@ -20,11 +20,11 @@ import java.util.UUID;
 public class AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final Logger log = LoggerFactory.getLogger(AttendanceService.class);
-    private final WebClient.Builder webClientBuilder;
+    WebClient eventClient = WebClient.create("http://localhost:8092/api/v1/event");
 
-    public AttendanceService(AttendanceRepository attendanceRepository, WebClient.Builder webClientBuilder) {
+
+    public AttendanceService(AttendanceRepository attendanceRepository) {
         this.attendanceRepository = attendanceRepository;
-        this.webClientBuilder = webClientBuilder;
     }
 
     public Mono<String> attendEvent(AttendanceRequest attendanceRequest) {
@@ -44,14 +44,13 @@ public class AttendanceService {
     }
 
     public Flux<EventResponse> getEventsByUserId(UUID userId) {
-        WebClient webClient = webClientBuilder.build();
         return attendanceRepository.findByUserId(userId)
                 .flatMap(attendance -> {
                     if (attendance == null) {
                         return Flux.empty();
                     } else {
-                        return webClient.get()
-                                .uri("http://localhost:8092/api/v1/event/list/{eventId}", attendance.getEventId())
+                        return eventClient.get()
+                                .uri("/list/{eventId}", attendance.getEventId())
                                 .retrieve()
                                 .bodyToMono(EventResponse.class)
                                 .map(eventResponse -> new EventResponse(
