@@ -2,7 +2,6 @@ package com.microservice.reactive.attendanceservice.handler;
 
 import com.microservice.reactive.attendanceservice.dto.AttendanceRequest;
 import com.microservice.reactive.attendanceservice.dto.EventResponse;
-import com.microservice.reactive.attendanceservice.dto.UserResponse;
 import com.microservice.reactive.attendanceservice.service.AttendanceService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -32,11 +31,5 @@ public class AttendanceHandler {
         UUID userId = UUID.fromString(request.pathVariable("userId"));
         Flux<EventResponse> events = attendanceService.getEventsByUserId(userId);
         return ServerResponse.ok().body(events, EventResponse.class);
-    }
-
-    public Mono<ServerResponse> handleGetUsersByEventId(ServerRequest request) {
-        UUID eventId = UUID.fromString(request.pathVariable("eventId"));
-        Flux<UserResponse> users = attendanceService.getUsersByEventId(eventId);
-        return ServerResponse.ok().body(users, UserResponse.class);
     }
 }

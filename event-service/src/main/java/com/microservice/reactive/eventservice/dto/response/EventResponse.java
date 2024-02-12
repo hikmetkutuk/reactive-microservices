@@ -10,7 +10,6 @@ public record EventResponse(
         LocalDateTime eventDate,
         String location,
         String description,
-        String category,
-        List<UserResponse> users
+        String category
 ) {
 }

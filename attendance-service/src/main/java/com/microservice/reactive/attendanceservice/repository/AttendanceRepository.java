@@ -7,6 +7,4 @@ import java.util.UUID;
 
 public interface AttendanceRepository extends ReactiveCrudRepository<Attendance, UUID> {
     Flux<Attendance> findByUserId(UUID userId);
-
-    Flux<Attendance> findByEventId(UUID eventId);
 }

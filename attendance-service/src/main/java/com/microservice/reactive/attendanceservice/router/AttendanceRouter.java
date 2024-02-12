@@ -15,7 +15,6 @@ public class AttendanceRouter {
     public static final String ATTENDANCE_ROUTE = "/api/v1/attendance";
     public static final String ATTEND_EVENT = ATTENDANCE_ROUTE + "/event";
     public static final String ATTENDANCE_EVENT_LIST = ATTENDANCE_ROUTE + "/event/list/{userId}";
-    public static final String ATTENDANCE_USER_LIST = ATTENDANCE_ROUTE + "/user/list/{eventId}";
     private final AttendanceHandler attendanceHandler;
 
     public AttendanceRouter(AttendanceHandler attendanceHandler) {
@@ -27,7 +26,6 @@ public class AttendanceRouter {
         return route()
                 .POST(ATTEND_EVENT, accept(APPLICATION_JSON), attendanceHandler::handleAttendEvent)
                 .GET(ATTENDANCE_EVENT_LIST, accept(APPLICATION_JSON), attendanceHandler::handleGetEventsByUserId)
-                .GET(ATTENDANCE_USER_LIST, accept(APPLICATION_JSON), attendanceHandler::handleGetUsersByEventId)
                 .build();
     }
 }
