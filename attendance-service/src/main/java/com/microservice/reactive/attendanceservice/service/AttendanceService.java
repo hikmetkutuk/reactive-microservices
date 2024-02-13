@@ -21,11 +21,14 @@ import java.util.UUID;
 public class AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final Logger log = LoggerFactory.getLogger(AttendanceService.class);
-    WebClient eventClient = WebClient.create("http://localhost:8092/api/v1/event");
-    WebClient userClient = WebClient.create("http://localhost:8091/api/v1/user");
+    private final WebClient.Builder webClientBuilder;
 
-    public AttendanceService(AttendanceRepository attendanceRepository) {
+    String eventClient = "http://event-service/api/v1/event";
+    String userClient = "http://user-service/api/v1/user";
+
+    public AttendanceService(AttendanceRepository attendanceRepository, WebClient.Builder webClientBuilder) {
         this.attendanceRepository = attendanceRepository;
+        this.webClientBuilder = webClientBuilder;
     }
 
     public Mono<String> attendEvent(AttendanceRequest attendanceRequest) {
@@ -50,8 +53,8 @@ public class AttendanceService {
                     if (attendance == null) {
                         return Flux.empty();
                     } else {
-                        return eventClient.get()
-                                .uri("/list/{eventId}", attendance.getEventId())
+                        return webClientBuilder.build().get()
+                                .uri(eventClient + "/list/{eventId}", attendance.getEventId())
                                 .retrieve()
                                 .bodyToMono(EventResponse.class)
                                 .map(eventResponse -> new EventResponse(
@@ -85,8 +88,8 @@ public class AttendanceService {
                     if (attendance == null) {
                         return Flux.empty();
                     } else {
-                        return userClient.get()
-                                .uri("/list/{userId}", attendance.getUserId())
+                        return webClientBuilder.build().get()
+                                .uri(userClient + "/list/{userId}", attendance.getUserId())
                                 .retrieve()
                                 .bodyToMono(UserResponse.class)
                                 .map(userResponse -> new UserResponse(

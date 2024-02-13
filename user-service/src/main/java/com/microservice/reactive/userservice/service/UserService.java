@@ -41,13 +41,15 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final ReactiveAuthenticationManager authenticationManager;
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
-    WebClient attendanceClient = WebClient.create("http://localhost:8093/api/v1/attendance");
+    private final WebClient.Builder webClientBuilder;
+    String attendanceClient = "http://attendance-service/api/v1/attendance";
 
-    public UserService(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, PasswordEncoder passwordEncoder, ReactiveAuthenticationManager authenticationManager) {
+    public UserService(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, PasswordEncoder passwordEncoder, ReactiveAuthenticationManager authenticationManager, WebClient.Builder webClientBuilder) {
         this.userRepository = userRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
+        this.webClientBuilder = webClientBuilder;
     }
 
     public Mono<ResponseEntity<?>> register(UserRequest userRequest) {
@@ -95,8 +97,8 @@ public class UserService {
 
     public Flux<UserResponse> getAllUsers() {
         return userRepository.findAllByDeletedFalse()
-                .flatMap(user -> attendanceClient.get()
-                        .uri("/event/list/{userId}", user.getId())
+                .flatMap(user -> webClientBuilder.build().get()
+                        .uri(attendanceClient + "/event/list/{userId}", user.getId())
                         .retrieve()
                         .bodyToFlux(EventResponse.class)
                         .collectList()
@@ -121,8 +123,8 @@ public class UserService {
     public Mono<UserResponse> getUserById(UUID userId) {
         return userRepository.findByIdWithLimit(userId)
                 .switchIfEmpty(Mono.error(new ResourceNotFoundException("User not found with ID: " + userId)))
-                .flatMap(user -> attendanceClient.get()
-                        .uri("/event/list/{userId}", userId)
+                .flatMap(user -> webClientBuilder.build().get()
+                        .uri(attendanceClient + "/event/list/{userId}", userId)
                         .retrieve()
                         .bodyToFlux(EventResponse.class)
                         .collectList()
